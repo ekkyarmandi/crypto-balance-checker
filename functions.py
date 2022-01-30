@@ -19,26 +19,40 @@ def render_html(url):
     page = BeautifulSoup(req.content,"html.parser")
     return page
 
-def find_table(page):
-    for div in page.find_all("div",{"class":"MuiPaper-root"}):
-        try:
-            h3 = div.find("h3")
-            if h3.get_text() in ["Wallet"]:
-                table = div.find("table")
-                return table
-        except: pass
-    return None
-
-def find_tokens(table):
+def find_tables(page):
     try:
+        tables = {}
+        for div in page.find_all("div",{"class":"MuiPaper-root"}):
+            try:
+                h3 = div.find("h3")
+                heading = h3.get_text()
+                if heading in ["Wallet","Luna Staking","Mirror","Anchor","Pylon"]:
+                    table = div.find("table")
+                    tables.update({heading:table})
+            except: pass
+        return tables
+    except: return None
+
+def find_tokens(table,symbol,sp=1,ep=3,version=2):
+    if version == 1:
+        balance = 0
+        for row in table.find("tbody").find_all("tr"):
+            for td in row.find_all("td")[sp:ep]:
+                value,token = td.find("p").get_text().split(" ")
+                if token == symbol:
+                    value = float(value.replace(",",""))
+                    balance += value
+        return {symbol:balance}
+    elif version == 2:
         balances = {}
         for row in table.find("tbody").find_all("tr"):
             td = row.find_all("td")
-            symbol = td[0].get_text().strip()
-            balance = td[1].get_text().strip()
-            balances.update({symbol:balance})
-        return balances
-    except: return None
+            token = td[0].get_text().strip()
+            value = td[1].get_text().strip()
+            value = float(value.replace(",",""))
+            balances.update({token:value})
+        try: return {symbol:balances[symbol]}
+        except: return {symbol:0}
 
 def replace_dot(variable):
     if "." in variable: return variable.strip(".")
@@ -186,9 +200,36 @@ class BalanceChecker():
                 xpath = '//*[@id="__next"]/div[2]/div[3]/div[1]/div[5]'
                 WebDriverWait(self.browser,10).until(EC.visibility_of_element_located((By.XPATH,xpath)))
                 page = BeautifulSoup(self.browser.page_source,"html.parser")
-                table = find_table(page)
-                new_tokens = find_tokens(table)
-                tokens.update(new_tokens)
+                tables = find_tables(page)
+                balance = {}
+                for heading in tables:
+                    table = tables[heading]
+                    if heading == "Wallet":
+                        token = "LUNA"
+                        try: balance.update(find_tokens(table,token))
+                        except: balance.update({token:"No Data Acquired"})
+                    elif heading == "Luna Staking":
+                        token = "LUNA"
+                        try:
+                            new_balance = find_tokens(table,token,version=1) # scrape the first table
+                            balance[token] += new_balance[token]                        
+                            next_table = table.find_next("table") # scrape the next table
+                            new_balance = find_tokens(next_table,token,ep=2,version=1)
+                            balance[token] += new_balance[token]
+                        except: balance.update({token:"No Data Acquired"})
+                    elif heading == "Mirror":
+                        token = "MIR"
+                        try: balance.update(find_tokens(table,token,version=1))
+                        except: balance.update({token:"No Data Acquired"})
+                    elif heading == "Anchor":
+                        token = "UST"
+                        try: balance.update(find_tokens(table,token,ep=2,version=1))
+                        except: balance.update({token:"No Data Acquired"})
+                    elif heading == "Pylon":
+                        token = "MINE"
+                        try: balance.update(find_tokens(table,token,ep=2,version=1))
+                        except: balance.update({token:"No Data Acquired"})
+                tokens.update(balance)
             except: pass
             self.browser.quit()
 
