@@ -46,7 +46,8 @@ class BalanceChecker():
 
     # open the browser
     options = Options()
-    options.add_argument("--level-log=3")
+    # options.add_argument("--level-log=3")
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
     browser = Chrome("chromedriver.exe",options=options)
     browser.set_window_position(-10000,0)
 
