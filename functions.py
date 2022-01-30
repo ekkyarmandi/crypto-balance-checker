@@ -43,6 +43,7 @@ def find_tokens(table):
 def replace_dot(variable):
     if "." in variable: return variable.strip(".")
     else: return variable.strip()
+    
 class BalanceChecker():
 
     # open the browser
