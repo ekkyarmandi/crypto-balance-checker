@@ -1,0 +1,4 @@
+dist/
+build/
+project/
+__pycache__/
