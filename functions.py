@@ -219,7 +219,7 @@ class BalanceChecker():
                         except: balance.update({token:"No Data Acquired"})
                     elif heading == "Mirror":
                         token = "MIR"
-                        try: balance.update(find_tokens(table,token,version=1))
+                        try: balance.update(find_tokens(table,token,ep=2,version=1))
                         except: balance.update({token:"No Data Acquired"})
                     elif heading == "Anchor":
                         token = "UST"
