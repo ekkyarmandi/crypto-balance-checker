@@ -10,7 +10,7 @@ from selenium.webdriver import Chrome
 from bs4 import BeautifulSoup
 import pandas as pd
 import requests
-import json
+import json, time
 
 headers = {"user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"}
 
@@ -196,6 +196,7 @@ class BalanceChecker():
 
         elif website == "https://apeboard.finance/":        
             self.browser.get(api+address)
+            time.sleep(5)
             try:
                 xpath = '//*[@id="__next"]/div[2]/div[3]/div[1]/div[5]'
                 WebDriverWait(self.browser,10).until(EC.visibility_of_element_located((By.XPATH,xpath)))

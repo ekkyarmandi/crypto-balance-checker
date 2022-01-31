@@ -36,13 +36,23 @@ for website in tqdm(bc.apis,"Get Balance"):
 # Concate to existing file
 outputfile = "Token Table.csv"
 if os.path.exists(outputfile):
+    
+    # read the old csv
     old_data = pd.read_csv(outputfile)
+    old_data = old_data.dropna(subset=['SCRAPING DATE','TOKEN','ADDRESS','BALANCE'])
+    
+    # convert result into dataframe
     results = pd.DataFrame(tokens)
+    
+    # concatinate the old one with the new one
     results = pd.concat([old_data,results])
+    
+    # save as CSV
     results.to_csv(outputfile,index=False)
 else:
+    # if the previous one doesn't exists, create new csv file instead
     results = pd.DataFrame(tokens)
     results.to_csv(outputfile,index=False)
 
-# printout the time elapse
+# printout the time leapse
 print(Fore.GREEN + "Done in {:.2f} sec".format(time.time()-start) + Style.RESET_ALL)
